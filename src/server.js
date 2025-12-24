@@ -13,4 +13,9 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+app.use(cors({
+  origin: "https://stock-transfer-management-frontend.vercel.app",
+  credentials: true,
+}));
+
 
