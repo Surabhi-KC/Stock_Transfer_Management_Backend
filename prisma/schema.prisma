@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Warehouse {
+  id        Int      @id @default(autoincrement())
+  name      String
+  location  String
+  userId    String
+  stocks    Stock[]
+  fromTransfers StockTransfer[] @relation("fromWarehouse")
+  toTransfers   StockTransfer[] @relation("toWarehouse")
+  createdAt DateTime @default(now())
+}
+
+model Stock {    
+  productName String
+  quantity    Int
+  warehouseId Int
+  userId    String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@id([userId, warehouseId, productName])
+}
+
+
+model StockTransfer {
+  id              Int      @id @default(autoincrement())
+  productName     String
+  quantity        Int
+  status          TransferStatus @default(PENDING)
+
+  fromWarehouseId Int
+  toWarehouseId   Int
+  userId          String
+
+  fromWarehouse   Warehouse @relation("fromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouse     Warehouse @relation("toWarehouse", fields: [toWarehouseId], references: [id])
+
+  history         TransferHistory[]
+  createdAt       DateTime @default(now())
+}
+
+
+model TransferHistory {
+  id          Int      @id @default(autoincrement())
+  transferId Int
+  status      TransferStatus
+  timestamp   DateTime @default(now())
+
+  transfer    StockTransfer @relation(fields: [transferId], references: [id])
+}
+
+enum TransferStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
